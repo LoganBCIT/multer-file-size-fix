@@ -1,3 +1,32 @@
+> **About this fork.** A practice fix by Logan Dutton-Anderson for multer issue
+> [#1348](https://github.com/expressjs/multer/issues/1348). Not an official multer release, and never
+> sent to the multer project: the maintainers had already fixed it in
+> [816beea](https://github.com/expressjs/multer/commit/816beeab6245f4a3478c7165823658fe20b47a80).
+> multer's own README follows below.
+
+## What was wrong
+
+A file exactly at `limits.fileSize` bytes was rejected as "File too large". multer passes its limits
+to busboy, and busboy reports the limit when a file reaches that size, not when it goes over it.
+
+## The fix
+
+multer now gives busboy the same limits with `fileSize` one byte higher, so the error only fires for a
+file bigger than the limit. The caller's own limits object is not changed. One file,
+`lib/make-middleware.js`: 9 lines added and 1 removed. The maintainers' fix added 15 and removed 1,
+with the same root cause.
+
+## How it was checked
+
+- Tests came first: 11 boundary tests were committed before the fix. A 12th was added after review.
+  The suite went from 92 to 104 tests.
+- The maintainers' own `test/error-handling.js` (upstream `3c0bc5e`) passes 24 of 24 against this version.
+- Review caught a mistake in my first version: copying the limits dropped any limits inherited
+  from a parent object. It is fixed in a later commit, with its own test.
+- Verified from a fresh clone. Run it with `npm install` then `npm test`.
+
+---
+
 # Multer [![NPM Version][npm-version-image]][npm-url] [![NPM Downloads][npm-downloads-image]][npm-url] [![Build Status][ci-image]][ci-url] [![Test Coverage][test-image]][test-url] [![OpenSSF Scorecard Badge][ossf-scorecard-badge]][ossf-scorecard-visualizer]
 
 Multer is a node.js middleware for handling `multipart/form-data`, which is primarily used for uploading files. It is written
